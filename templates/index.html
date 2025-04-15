@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>شات بوت تقرير الدراسة الذاتية</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>نظام تقييم الدراسة الذاتية</h1>
+        <p>أداة ذكية لإعداد تقرير الدراسة الذاتية للبرامج الأكاديمية</p>
+      </header>
+
+      <main>
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages"></div>
+          <div class="chat-input">
+            <input
+              type="text"
+              id="message-input"
+              placeholder="اكتب رسالتك هنا..."
+            />
+            <button id="send-button">إرسال</button>
+          </div>
+        </div>
+
+        <div class="criteria-sidebar">
+          <h2>المعايير والمحكات</h2>
+          <div class="criteria-list">
+            <div class="criterion-group">
+              <h3>المعيار الأول: إدارة البرنامج وضمان جودته</h3>
+              <ul>
+                <li data-id="1-1-1">
+                  1-1-1 تتسق رسالة البرنامج وأهدافه مع رسالة المؤسسة/الكلية
+                </li>
+                <li data-id="1-1-2">
+                  1-1-2 يتوفر لدى البرنامج العدد الكافي من الكوادر المؤهلة
+                </li>
+                <li data-id="1-1-3">
+                  1-1-3 يتوفر للبرنامج مناخ تنظيمي وبيئة أكاديمية داعمة
+                </li>
+              </ul>
+            </div>
+            <div class="criterion-group">
+              <h3>المعيار الثاني: التعليم والتعلم</h3>
+              <ul>
+                <li data-id="2-1-1">
+                  2-1-1 يتوافق البرنامج مع الإطار الوطني للمؤهلات
+                </li>
+              </ul>
+            </div>
+            <div class="criterion-group">
+              <h3>المعيار الثالث: الطلاب</h3>
+              <ul>
+                <li data-id="3-1-1">
+                  3-1-1 تطبق معايير وشروط قبول الطلاب بعدالة وشفافية
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <p>جميع الحقوق محفوظة &copy; 2025</p>
+      </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  </body>
+</html>
