@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 class DataStorage:    
-    def __init__(self, storage_dir="/self_assessment_chatbot/data"):
+    def __init__(self, storage_dir="/data"):
         """تهيئة نظام التخزين"""
         self.storage_dir = storage_dir
         self.ensure_storage_dir_exists()
