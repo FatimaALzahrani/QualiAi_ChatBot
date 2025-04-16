@@ -1,4 +1,3 @@
-data_manager
 datetime
 json
 flask_socketio
