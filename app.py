@@ -429,7 +429,7 @@ def reset_data():
         return jsonify({"error": "يجب تأكيد إعادة تعيين البيانات"}), 400
 
 if __name__ == '__main__':
-    os.makedirs('/criteria', exist_ok=True)
-    os.makedirs('/reports', exist_ok=True)
+    os.makedirs('criteria', exist_ok=True)
+    os.makedirs('reports', exist_ok=True)
     
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
