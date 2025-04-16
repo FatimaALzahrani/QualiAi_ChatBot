@@ -1,0 +1,8 @@
+data_manager
+datetime
+json
+flask_socketio
+flask
+PyPDF2
+re
+os
