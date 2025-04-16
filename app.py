@@ -9,11 +9,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
-# إنشاء مدير البيانات
 data_storage = DataStorage()
 data_analyzer = DataAnalyzer(data_storage)
 
-# قاموس لتخزين المعايير والمحكات
 criteria_data = {
     "المعيار الأول": {
         "name": "إدارة البرنامج وضمان جودته",
@@ -158,7 +156,6 @@ criteria_data = {
     }
 }
 
-# حالة المحادثة
 chat_state = {
     "current_step": "welcome",
     "selected_criterion": None,
@@ -183,16 +180,14 @@ def handle_message(data):
     user_message = data['message']
     
     if chat_state["current_step"] == "welcome":
-        # تحديد المعيار والمحك
         criterion_found = False
         
-        # البحث عن المحك باستخدام التعبيرات النمطية
         criterion_id_pattern = re.compile(r'(\d+-\d+-\d+)')
         match = criterion_id_pattern.search(user_message)
         
         if match:
             criterion_id = match.group(1)
-            # البحث عن المحك بالرقم
+
             for criterion_key, criterion_data in criteria_data.items():
                 for criterion in criterion_data["criteria"]:
                     if criterion["id"] == criterion_id:
@@ -203,7 +198,6 @@ def handle_message(data):
                     break
         
         if not criterion_found:
-            # البحث عن المحك بالنص
             for criterion_key, criterion_data in criteria_data.items():
                 for criterion in criterion_data["criteria"]:
                     if criterion["text"] in user_message:
@@ -214,24 +208,20 @@ def handle_message(data):
                     break
         
         if not criterion_found:
-            # إذا لم يتم العثور على المحك
             emit('message', {
                 'sender': 'bot', 
                 'text': 'لم أتمكن من تحديد المحك. الرجاء تحديد رقم المحك (مثل 1-1-1) أو نصه بشكل واضح، أو اختيار محك من القائمة الجانبية.'
             })
     
     elif chat_state["current_step"] == "analyze_criterion":
-        # جمع المعلومات حول الأدلة
         current_evidence = chat_state["current_evidence"]
         
-        # تخزين إجابة المستخدم
         if any(word in user_message.lower() for word in ["نعم", "متوفر", "موجود", "يوجد"]):
             chat_state["evidence_data"][current_evidence] = {
                 "available": True,
                 "implemented": None
             }
             
-            # سؤال عن التنفيذ
             emit('message', {
                 'sender': 'bot', 
                 'text': f'هل تم تنفيذ المتطلبات المتعلقة بـ: {current_evidence}؟'
@@ -243,24 +233,19 @@ def handle_message(data):
                 "implemented": False
             }
             
-            # الانتقال إلى الدليل التالي
             move_to_next_evidence()
     
     elif chat_state["current_step"] == "check_implementation":
-        # جمع المعلومات حول التنفيذ
         current_evidence = chat_state["current_evidence"]
         
-        # تخزين إجابة المستخدم
         if any(word in user_message.lower() for word in ["نعم", "تم", "منفذ", "مكتمل"]):
             chat_state["evidence_data"][current_evidence]["implemented"] = True
         else:
             chat_state["evidence_data"][current_evidence]["implemented"] = False
         
-        # الانتقال إلى الدليل التالي
         move_to_next_evidence()
     
     elif chat_state["current_step"] == "summarize":
-        # إعادة تعيين حالة المحادثة
         reset_chat_state()
         
         emit('message', {
@@ -275,13 +260,11 @@ def start_criterion_analysis(criterion):
     chat_state["current_question_index"] = 0
     chat_state["evidence_data"] = {}
     
-    # إرسال رسالة تحليل المحك
     emit('message', {
         'sender': 'bot', 
         'text': f'سنقوم بتحليل المحك: **{criterion["id"]} - {criterion["text"]}**\n\nسأطرح عليك بعض الأسئلة حول الأدلة والشواهد المطلوبة لهذا المحك لمساعدتك في تقييمه.'
     })
     
-    # طرح السؤال الأول حول الأدلة
     if len(criterion["evidence"]) > 0:
         evidence = criterion["evidence"][0]
         chat_state["current_evidence"] = evidence
@@ -291,7 +274,6 @@ def start_criterion_analysis(criterion):
         })
 
 def move_to_next_evidence():
-    """الانتقال إلى الدليل التالي"""
     criterion = chat_state["selected_criterion"]
     chat_state["current_question_index"] += 1
     
@@ -304,7 +286,6 @@ def move_to_next_evidence():
             'text': f'هل يتوفر لديك الدليل التالي: **{next_evidence}**؟'
         })
     else:
-        # انتهاء جمع المعلومات
         chat_state["current_step"] = "summarize"
         analyze_and_summarize()
 
@@ -313,23 +294,18 @@ def analyze_and_summarize():
     criterion = chat_state["selected_criterion"]
     evidence_data = chat_state["evidence_data"]
     
-    # تحضير البيانات للتخزين
     criterion_data = {
         "id": criterion["id"],
         "text": criterion["text"],
         "evidence_data": evidence_data
     }
     
-    # تحليل البيانات باستخدام محلل البيانات
     analysis_results = data_analyzer.analyze_criterion(criterion_data)
     
-    # دمج نتائج التحليل مع بيانات المحك
     criterion_data.update(analysis_results)
     
-    # حفظ البيانات
     data_storage.save_criterion_data(criterion["id"], criterion_data)
     
-    # إرسال الملخص
     summary_text = f"**ملخص تقييم المحك {criterion['id']}**\n\n"
     
     summary_text += "**نقاط القوة:**\n"
@@ -355,19 +331,16 @@ def analyze_and_summarize():
     
     summary_text += f"\n**التقييم المقترح:** {analysis_results['rating']} - {analysis_results['rating_text']}"
     
-    # إضافة توصيات إضافية
     summary_text += "\n\n**توصيات إضافية:**\n"
     for recommendation in analysis_results["additional_recommendations"]:
         summary_text += f"- {recommendation}\n"
     
-    # إضافة إحصائيات الأدلة
     evidence_stats = analysis_results["evidence_stats"]
     summary_text += f"\n**إحصائيات الأدلة:**\n"
     summary_text += f"- إجمالي الأدلة المطلوبة: {evidence_stats['total']}\n"
     summary_text += f"- الأدلة المتوفرة: {evidence_stats['available']} ({evidence_stats['availability_percentage']}%)\n"
     summary_text += f"- الأدلة المنفذة: {evidence_stats['implemented']} ({evidence_stats['implementation_percentage']}%)\n"
     
-    # إضافة رابط لتحميل التقرير
     summary_text += "\n**تم حفظ نتائج التقييم في قاعدة البيانات. يمكنك الوصول إلى التقرير الكامل من خلال زر 'تقارير' في الصفحة الرئيسية.**"
     
     socketio.emit('message', {
@@ -376,7 +349,6 @@ def analyze_and_summarize():
     })
 
 def reset_chat_state():
-    """إعادة تعيين حالة المحادثة"""
     chat_state["current_step"] = "welcome"
     chat_state["selected_criterion"] = None
     chat_state["collected_data"] = {}
@@ -388,13 +360,11 @@ def reset_chat_state():
 
 @app.route('/api/reports', methods=['GET'])
 def get_reports():
-    """الحصول على قائمة التقارير"""
     criteria = data_storage.list_saved_criteria()
     return jsonify(criteria)
 
 @app.route('/api/report/<criterion_id>', methods=['GET'])
 def get_report(criterion_id):
-    """الحصول على تقرير محك محدد"""
     criterion_data = data_storage.load_criterion_data(criterion_id)
     if criterion_data:
         return jsonify(criterion_data)
@@ -403,7 +373,6 @@ def get_report(criterion_id):
 
 @app.route('/api/summary', methods=['GET'])
 def get_summary():
-    """الحصول على ملخص التقرير الكامل"""
     summary = data_analyzer.generate_report_summary()
     if summary:
         return jsonify(summary)
@@ -412,19 +381,16 @@ def get_summary():
 
 @app.route('/api/generate_report', methods=['POST'])
 def generate_full_report():
-    """إنشاء تقرير كامل"""
     report_name = request.json.get('report_name', 'self_assessment_report')
     report_path, report = data_storage.generate_report(report_name)
     return jsonify({"report_path": report_path, "report": report})
 
 @app.route('/api/criteria', methods=['GET'])
 def get_all_criteria():
-    """الحصول على قائمة جميع المعايير والمحكات"""
     return jsonify(criteria_data)
 
 @app.route('/api/criterion/<criterion_id>', methods=['GET'])
 def get_criterion(criterion_id):
-    """الحصول على معلومات محك محدد"""
     for criterion_key, criterion_data in criteria_data.items():
         for criterion in criterion_data["criteria"]:
             if criterion["id"] == criterion_id:
@@ -433,19 +399,16 @@ def get_criterion(criterion_id):
 
 @app.route('/api/statistics', methods=['GET'])
 def get_statistics():
-    """الحصول على إحصائيات عامة"""
     statistics = data_analyzer.generate_statistics()
     return jsonify(statistics)
 
 @app.route('/api/export_data', methods=['GET'])
 def export_data():
-    """تصدير جميع البيانات المخزنة"""
     data = data_storage.export_all_data()
     return jsonify(data)
 
 @app.route('/api/import_data', methods=['POST'])
 def import_data():
-    """استيراد بيانات"""
     data = request.json.get('data', {})
     success = data_storage.import_data(data)
     if success:
@@ -455,7 +418,6 @@ def import_data():
 
 @app.route('/api/reset_data', methods=['POST'])
 def reset_data():
-    """إعادة تعيين جميع البيانات"""
     confirm = request.json.get('confirm', False)
     if confirm:
         success = data_storage.reset_all_data()
@@ -467,8 +429,7 @@ def reset_data():
         return jsonify({"error": "يجب تأكيد إعادة تعيين البيانات"}), 400
 
 if __name__ == '__main__':
-    # إنشاء مجلدات البيانات إذا لم تكن موجودة
-    os.makedirs('/home/ubuntu/self_assessment_chatbot/data/criteria', exist_ok=True)
-    os.makedirs('/home/ubuntu/self_assessment_chatbot/data/reports', exist_ok=True)
+    os.makedirs('/criteria', exist_ok=True)
+    os.makedirs('/reports', exist_ok=True)
     
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
